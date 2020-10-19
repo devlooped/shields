@@ -45,7 +45,7 @@ namespace Shields
                     Content = JsonConvert.SerializeObject(new
                     {
                         schemaVersion = 1,
-                        label = "nuget.404",
+                        label = id + ".404",
                         message = "NotFound",
                     }),
                     ContentType = "application/json",
@@ -57,7 +57,7 @@ namespace Shields
                 Content = JsonConvert.SerializeObject(new
                 {
                     schemaVersion = 1,
-                    label = "nuget.ci",
+                    label = id,
                     message = package.Version.ToNormalizedString(),
                 }),
                 ContentType = "application/json",
