@@ -1,4 +1,3 @@
-using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
@@ -31,7 +30,7 @@ namespace Shields
                 f.FirstOrDefault() ?? defaultFeed :
                 defaultFeed;
 
-            if (!feedUrl.StartsWith("http://") || !feedUrl.StartsWith("https://"))
+            if (!feedUrl.StartsWith("http://") && !feedUrl.StartsWith("https://"))
                 feedUrl = "https://" + feedUrl;
 
             var providers = Repository.Provider.GetCoreV3();
