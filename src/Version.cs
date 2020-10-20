@@ -66,7 +66,11 @@ namespace Shields
         static async Task<PackageIdentity> GetPackage(string packageId, string feedUrl, bool includePrerelease = false, string? prereleaseLabel = null)
         {
             var cache = MemoryCache.Default;
-            var package = cache["v|" + packageId] as PackageIdentity;
+            var key = includePrerelease ?
+                feedUrl + "|v|" + packageId :
+                feedUrl + "|vpre|" + packageId + "|" + (prereleaseLabel ?? "");
+
+            var package = cache[key] as PackageIdentity;
             if (package == null)
             {
                 var providers = Repository.Provider.GetCoreV3();
@@ -86,7 +90,7 @@ namespace Shields
                     AbsoluteExpiration = DateTimeOffset.Now.AddMinutes(1),
                 };
 
-                cache.Set("v|" + packageId, package, policy);
+                cache.Set(key, package, policy);
             }
 
             return package;
