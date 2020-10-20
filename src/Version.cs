@@ -12,6 +12,8 @@ using System.Threading;
 using System.Linq;
 using NuGet.Packaging.Core;
 using System.Collections.Generic;
+using System.Net.Http;
+using System.Net;
 
 namespace Shields
 {
@@ -67,15 +69,16 @@ namespace Shields
         }
 
         [FunctionName("vpre")]
-        public static async Task<IActionResult> RunPre(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "vpre/{id}/{label?}")] HttpRequest req,
+        public static async Task<HttpResponseMessage> RunPre(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "vpre/{id}/{label?}")] HttpRequestMessage req,
             ILogger log, string id, string? label)
         {
-            var feedUrl = req.Query.TryGetValue("feed", out var feed) ?
-                feed.FirstOrDefault() ?? defaultFeed :
-                req.Query.TryGetValue("f", out var f) ?
-                f.FirstOrDefault() ?? defaultFeed :
-                defaultFeed;
+            var feedUrl = defaultFeed;
+            if (!string.IsNullOrEmpty(req.RequestUri.Query))
+            {
+                var qs = req.RequestUri.ParseQueryString();
+                feedUrl = qs["feed"] ?? qs["f"] ?? defaultFeed;
+            }
 
             if (!feedUrl.StartsWith("http://") && !feedUrl.StartsWith("https://"))
                 feedUrl = "https://" + feedUrl;
@@ -91,31 +94,21 @@ namespace Shields
                 query = query.Where(m => m.Version.IsPrerelease && m.Version.ReleaseLabels.Any(l => l.StartsWith(label)));
 
             var package = query.FirstOrDefault();
-
-            if (package == null)
-                return new ContentResult
+            var content = package == null ?
+                new
                 {
-                    Content = JsonConvert.SerializeObject(new
-                    {
-                        schemaVersion = 1,
-                        label = id + ".404",
-                        message = "NotFound",
-                    }),
-                    ContentType = "application/json",
-                    StatusCode = 200
-                };
-
-            return new ContentResult
-            {
-                Content = JsonConvert.SerializeObject(new
+                    schemaVersion = 1,
+                    label = id + ".404",
+                    message = "NotFound",
+                } :
+                new
                 {
                     schemaVersion = 1,
                     label = id,
                     message = package.Version.ToNormalizedString(),
-                }),
-                ContentType = "application/json",
-                StatusCode = 200
-            };
+                };
+
+            return req.CreateCachedResponse(HttpStatusCode.OK, content);
         }
     }
 }
