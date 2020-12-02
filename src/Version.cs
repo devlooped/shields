@@ -67,8 +67,8 @@ namespace Shields
         {
             var cache = MemoryCache.Default;
             var key = includePrerelease ?
-                feedUrl + "|v|" + packageId :
-                feedUrl + "|vpre|" + packageId + "|" + (prereleaseLabel ?? "");
+                feedUrl + "|vpre|" + packageId + "|" + (prereleaseLabel ?? "") :
+                feedUrl + "|v|" + packageId;
 
             var package = cache[key] as PackageIdentity;
             if (package == null)
