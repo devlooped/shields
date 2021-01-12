@@ -4,7 +4,7 @@ Custom endpoints for custom badges using https://shields.io/endpoint.
 
 Main usage is to use as your shields badge the URL `https://img.shields.io/endpoint?url=https://shields.kzu.io/`  followed by one of the supported endpoints below.
 
-This service complements nicely [sleet](https://github.com/emgarten/Sleet)-powered feeds.
+This service complements nicely [sleet](https://github.com/emgarten/Sleet)-powered feeds, but also virtually all CI systems that produce nuget feeds from build artifacts (Azure packaging example below).
 
 # nuget version endpoints
 
@@ -27,4 +27,4 @@ You can also abbreviate `feed` as just `f`.
 | ![badge](https://img.shields.io/endpoint?url=https://shields.kzu.io/vpre/Avatar/pr77?f=pkg.kzu.io/index.json&color=green)                             | `/vpre/Avatar/pr77?f=pkg.kzu.io/index.json&color=green`                                                     |
 | ![badge](https://img.shields.io/endpoint?url=https://shields.kzu.io/vpre/Moq/main&labelColor=F4BE00&color=black&logoColor=004880&logo=NuGet&style=flat-square) | /vpre/Moq/main?f=pkg.kzu.io/index.json&labelColor=F4BE00&color=black&<br/>logoColor=004880&logo=NuGet&style=flat-square |
 
-> NOTE: the `?feed=` must be the first querystring argument after the `url=https://shields.kzu.io` argument to `https://img.shields.io/endpoint`. That way, the subsequent query string arguments after the subsequent `&` will be interpreted as querystring arguments for shields.io. Alternatively, you can pass all the shields.io arguments *first* and leave the `&url=` as the last argument (which would only include the `?feed=` then), which is probably safest and easiest to remember.
+> NOTE: the `?feed=` must be the first querystring argument after the `url=https://shields.kzu.io` argument to `https://img.shields.io/endpoint`. That way, the subsequent query string arguments after the `&` will be interpreted as querystring arguments for shields.io. Alternatively, you can pass all the shields.io arguments *first* and leave the `&url=` as the last argument (which would only include the `?feed=` then), which is probably safest and easiest to remember.
