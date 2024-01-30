@@ -11,8 +11,10 @@ This service complements nicely [sleet](https://github.com/emgarten/Sleet)-power
 The built-in [shields.io](https://shields.io/category/version) support for nuget versions only works with the nuget.org repository. We provide support for arbitrary feeds as follows:
 
 ```
-[v|vpre]/[package id]?feed=[v3 feed]
+[v|vpre]/[package id][/package label]?feed=[v3 feed]
 ```
+
+> NOTE: package label is optional and can be used to filter pre-release packages
 
 You can also abbreviate `feed` as just `f`. 
 
