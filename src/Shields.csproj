@@ -7,7 +7,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="4.2.0" />
     <PackageReference Include="NuGet.Protocol" Version="6.8.0" />
-    <PackageReference Include="System.Runtime.Caching" Version="6.0.0" />
+    <PackageReference Include="System.Runtime.Caching" Version="7.0.0" />
   </ItemGroup>
   <ItemGroup>
     <None Update="host.json" CopyToOutputDirectory="PreserveNewest" />
