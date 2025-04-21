@@ -1,7 +1,4 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/azure/functions-action
-# More GitHub Actions for Azure: https://github.com/Azure/actions
-
-name: Build and deploy dotnet core project to Azure Function App - shields
+﻿name: deploy
 
 on:
   push:
@@ -10,36 +7,30 @@ on:
   workflow_dispatch:
 
 env:
-  AZURE_FUNCTIONAPP_PACKAGE_PATH: '.' # set this to the path to your web app project, defaults to the repository root
-  DOTNET_VERSION: '8.0.x' # set this to the dotnet version to use
+  Configuration: Release
+  DOTNET_VERSION: '8.0.x'
 
 jobs:
-  build-and-deploy:
+  publish:
     runs-on: ubuntu-latest
-    
     steps:
-      - name: 'Checkout GitHub Action'
+      - name: 🤘 checkout
         uses: actions/checkout@v4
 
-      - name: Setup DotNet ${{ env.DOTNET_VERSION }} Environment
+      - name: ⚙ dotnet
         uses: actions/setup-dotnet@v1
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: 'Resolve Project Dependencies Using Dotnet'
-        shell: bash
-        run: |
-          pushd './${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}'
-          dotnet build --configuration Release --output ./output
-          popd
+      - name: 🙏 build
+        run: dotnet build --output ./output
       
-      - name: 'Run Azure Functions Action'
+      - name: 🚀 deploy
         uses: Azure/functions-action@v1
-        id: fa
         with:
           app-name: 'shields'
           slot-name: 'Production'
-          package: '${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/output'
+          package: './output'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_70E8E83C2B794E4386A4CE1B5C3B78F7 }}
           sku: 'flexconsumption'
         
