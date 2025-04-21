@@ -13,7 +13,7 @@ namespace Shields
         {
             var response = request.CreateResponse(statusCode);
             response.Content = new StringContent(JsonConvert.SerializeObject(value), Encoding.UTF8, "application/json");
-            if (request.RequestUri.Host != "localhost")
+            if (request.RequestUri?.Host != "localhost")
             {
                 response.Headers.CacheControl = new CacheControlHeaderValue
                 {
