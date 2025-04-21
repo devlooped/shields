@@ -1,25 +1,23 @@
 ﻿using System;
 using System.Net;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Text;
-using Newtonsoft.Json;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Azure.Functions.Worker.Http;
 
 namespace Shields
 {
     public static class CacheResponseExtensions
     {
-        public static HttpResponseMessage CreateCachedResponse<T>(this HttpRequestMessage request, HttpStatusCode statusCode, T value, TimeSpan? maxAge = null)
+        public static async Task<HttpResponseData> CreateCachedResponseDataAsync<T>(this HttpRequestData request, HttpStatusCode statusCode, T value, TimeSpan? maxAge = null)
         {
             var response = request.CreateResponse(statusCode);
-            response.Content = new StringContent(JsonConvert.SerializeObject(value), Encoding.UTF8, "application/json");
-            if (request.RequestUri?.Host != "localhost")
+            await response.WriteAsJsonAsync(value);
+
+            var hostName = request.Url.Host;
+            if (hostName != "localhost")
             {
-                response.Headers.CacheControl = new CacheControlHeaderValue
-                {
-                    Public = true,
-                    MaxAge = maxAge ?? TimeSpan.FromMinutes(1)
-                };
+                var cacheValue = $"public, max-age={maxAge?.TotalSeconds ?? 60}";
+                response.Headers.Add("Cache-Control", cacheValue);
             }
 
             return response;

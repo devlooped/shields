@@ -3,39 +3,40 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Runtime.Caching;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Extensions.Http;
+using System.Web;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Azure.Functions.Worker;
+using Microsoft.Azure.Functions.Worker.Http;
+using Microsoft.Extensions.Caching.Memory;
 using NuGet.Configuration;
 using NuGet.Packaging.Core;
 using NuGet.Protocol.Core.Types;
 
 namespace Shields;
 
-public static class Version
+public class Version(IMemoryCache cache)
 {
     const string defaultFeed = "https://pkg.kzu.app/index.json";
     static readonly PackageIdentity nullPackage = new("null", new NuGet.Versioning.NuGetVersion("0.0.0-null"));
 
-    [FunctionName("v")]
-    public static Task<HttpResponseMessage> Run(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "v/{id}")] HttpRequestMessage req, string id)
+    [Function("v")]
+    public Task<HttpResponseData> Run(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "v/{id}")] HttpRequestData req, string id)
         => Run(req, id, false);
 
-    [FunctionName("vpre")]
-    public static Task<HttpResponseMessage> RunPre(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "vpre/{id}/{label?}")] HttpRequestMessage req, string id, string? label)
+    [Function("vpre")]
+    public Task<HttpResponseData> RunPre(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "vpre/{id}/{label?}")] HttpRequestData req, string id, string? label)
         => Run(req, id, true, label);
 
-    static async Task<HttpResponseMessage> Run(HttpRequestMessage req, string packageId, bool includePrerelease, string? prereleaseLabel = null)
+    async Task<HttpResponseData> Run(HttpRequestData req, string packageId, bool includePrerelease, string? prereleaseLabel = null)
     {
         var feedUrl = defaultFeed;
-        if (!string.IsNullOrEmpty(req.RequestUri?.Query))
+        if (req.Query.Count > 0)
         {
-            var qs = req.RequestUri.ParseQueryString();
-            feedUrl = qs["feed"] ?? qs["f"] ?? defaultFeed;
+            feedUrl = req.Query["feed"] ?? req.Query["f"] ?? defaultFeed;
         }
 
         if (!feedUrl.StartsWith("http://") && !feedUrl.StartsWith("https://"))
@@ -56,18 +57,16 @@ public static class Version
                 message = package.Version.ToNormalizedString(),
             };
 
-        return req.CreateCachedResponse(HttpStatusCode.OK, content);
+        return await req.CreateCachedResponseDataAsync(HttpStatusCode.OK, content);
     }
 
-    static async Task<PackageIdentity> GetPackage(string packageId, string feedUrl, bool includePrerelease = false, string? prereleaseLabel = null)
+    async Task<PackageIdentity> GetPackage(string packageId, string feedUrl, bool includePrerelease = false, string? prereleaseLabel = null)
     {
-        var cache = MemoryCache.Default;
         var key = includePrerelease ?
             feedUrl + "|vpre|" + packageId + "|" + (prereleaseLabel ?? "") :
             feedUrl + "|v|" + packageId;
 
-        var package = cache[key] as PackageIdentity;
-        if (package == null)
+        if (!cache.TryGetValue<PackageIdentity>(key, out var package) || package == null)
         {
             var providers = Repository.Provider.GetCoreV3();
             var source = new PackageSource(feedUrl);
@@ -83,13 +82,7 @@ public static class Version
                 query = query.Where(m => m.Version.IsPrerelease && m.Version.ReleaseLabels.Any(l => l.StartsWith(prereleaseLabel)));
 
             package = query.FirstOrDefault() ?? nullPackage;
-
-            var policy = new CacheItemPolicy
-            {
-                AbsoluteExpiration = DateTimeOffset.Now.AddMinutes(1),
-            };
-
-            cache.Set(key, package, policy);
+            cache.Set(key, package, DateTimeOffset.Now.AddMinutes(1));
         }
 
         return package;

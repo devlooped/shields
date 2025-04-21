@@ -10,7 +10,8 @@
       "samplingExcludedTypes": "Request",
       "samplingSettings": {
         "isEnabled": true
-      }
+      },
+      "enableLiveMetricsFilters": true
     }
   }
 }
